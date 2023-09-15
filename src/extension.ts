@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { Game } from "@gathertown/gather-game-client";
+import axios from 'axios';
 //@ts-ignore
 global.WebSocket = require("isomorphic-ws")
 var useManualStatus = false;
@@ -39,8 +40,6 @@ export function activate(context: vscode.ExtensionContext) {
 				status = vscode.workspace.getConfiguration("gathertown").get("manualStatus") as string;
 			}
 			game.setTextStatus(status);		
-		}else {
-			game.setTextStatus("");			
 		}
 	});
 	let disposable = vscode.commands.registerCommand('gathertown.setStatusManually', async () => {
@@ -56,10 +55,36 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.workspace.getConfiguration("gathertown").update("manualStatus", manualStatus).then(() => {
 			game.setTextStatus(manualStatus ?? "");
 		});
-		vscode.window.showInformationMessage('Hello World from test-ext!');
 	});
-
 	context.subscriptions.push(disposable);
+
+	let disposable2 = vscode.commands.registerCommand('gathertown.setStatusFromGitlabIssue', async () => {
+		var id = "";
+		var apiKey = vscode.workspace.getConfiguration("gathertown").get("gitlabToken") as string;
+		var url = vscode.workspace.getConfiguration("gathertown").get("gitlabUrl") as string;
+		if(vscode.workspace.getConfiguration("gathertown").get("groupOrProject") === "group"){
+			id = vscode.workspace.getConfiguration("gathertown").get("gitlabGroupId") as string;
+		} else {
+			id = vscode.workspace.getConfiguration("gathertown").get("gitlabProjectId") as string;
+		}
+		axios.get(url + "/api/v4/groups/" + id + "/issues?state=opened&private_token=" + apiKey, {headers:{"PRIVATE-TOKEN":apiKey}}).then((response) => {
+			var issues = response.data;
+			var options = issues.map((issue: any) => {
+				return {
+					label: `#${issue.iid} ${issue.title}`,
+					description: issue.web_url
+				};
+			});
+			vscode.window.showQuickPick(options).then((issue:any) => {
+				let output = vscode.window.createOutputChannel("GatherTown");
+				output.show();
+				if(issue){				
+					game.setTextStatus(issue.label);
+				}
+			});
+		});
+	});
+	context.subscriptions.push(disposable2);
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "gathertown-vscode-status" is now active!' + apikey);
