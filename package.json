@@ -3,7 +3,7 @@
   "displayName": "Gather.Town VSCode Status", 
   "description": "Sets your gather.town status to what you are working on in vscode",
   "publisher": "jorbo",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "GNU General Public License v3.0",
   "icon": "gathertownlogo.png",
   "repository": {
@@ -92,7 +92,7 @@
         "gathertown.groupOrProject": {
           "type": "string",        
           "default": "project",
-          "enum": ["group", "project"],
+          "enum": ["groups", "projects"],
           "enumDescriptions": ["Track a group", "Track a project"],
           "description": "Whether to track a group or a project"
         }
