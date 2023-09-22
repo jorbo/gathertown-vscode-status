@@ -3,7 +3,7 @@
   "displayName": "Gather.Town VSCode Status", 
   "description": "Sets your gather.town status to what you are working on in vscode",
   "publisher": "jorbo",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "GNU General Public License v3.0",
   "icon": "gathertownlogo.png",
   "repository": {
@@ -29,6 +29,14 @@
       {
         "command": "gathertown.setStatusFromGitlabIssue",
         "title": "Gather Town: Set Status From Gitlab Issue"
+      },
+      {
+        "command": "gathertown.copyIssueLinkToClipboard",
+        "title": "Gather Town: Copy Issue Link To Clipboard"
+      },
+      {
+        "command": "gathertown.clearSelectedIssue",
+        "title": "Gather Town: Clear Selected Issue"
       }
     ],
     "configuration": {

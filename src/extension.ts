@@ -83,7 +83,7 @@ export function activate(context: vscode.ExtensionContext) {
 		else {
 			id = vscode.workspace.getConfiguration("gathertown").get("gitlabProjectId") as string;
 		}
-		axios.get(`${url}/api/v4/${groupsOrProjects}/${id}/issues?private_token=${gitlabToken}&state=opened`, {headers:{"PRIVATE-TOKEN":gitlabToken}}).then((response) => {
+		axios.get(`${url}/api/v4/${groupsOrProjects}/${id}/issues?private_token=${gitlabToken}&state=opened&per_page=1000&not[labels]=Testing`, {headers:{"PRIVATE-TOKEN":gitlabToken}}).then((response) => {
 			var issues = response.data;
 			var options = issues.map((issue: any) => {
 				return {
@@ -101,6 +101,11 @@ export function activate(context: vscode.ExtensionContext) {
 					output.appendLine(`Labels: ${issue.lables as string[]}`);
 					var issueIid = issue.iid;
 					var issueProjectId = issue.projectId;
+					axios.put(`${url}/api/v4/projects/${context.globalState.get("issueProjectId")}/issues/${context.globalState.get("issueId")}?private_token=${gitlabToken}&remove_labels=Doing - Active`, {headers:{"PRIVATE-TOKEN":gitlabToken}}).then((response) => {
+						output.appendLine(JSON.stringify(response.headers));
+					}).catch((error) => {
+						output.appendLine(error);
+					});
 					context.globalState.update("issueId", issueIid);;
 					context.globalState.update("issueProjectId", issueProjectId);
 					axios.put(`${url}/api/v4/projects/${issue.projectId}/issues/${issue.iid}?private_token=${gitlabToken}&remove_labels=Essential List&add_labels=Doing - Active`, {headers:{"PRIVATE-TOKEN":gitlabToken}}).then((response) => {
@@ -119,6 +124,20 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable2);
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
+	let disposable3 = vscode.commands.registerCommand('gathertown.copyIssueLinkToClipboard', async () => {
+		axios.get(`${url}/api/v4/projects/${issueProjectId}/issues/${issueId}?private_token=${gitlabToken}`, {headers:{"PRIVATE-TOKEN":gitlabToken}}).then((response) => {
+			vscode.env.clipboard.writeText(response.data.web_url);
+		}).catch((error) => {
+			output.appendLine(error);
+		});
+	});
+	context.subscriptions.push(disposable3);
+	let disposable4 = vscode.commands.registerCommand('gathertown.clearSelectedIssue', async () => {
+		game.setTextStatus('');
+		context.globalState.update("issueId", undefined);
+		context.globalState.update("issueProjectId", undefined);
+	});
+	context.subscriptions.push(disposable4);
 }
 
 // This method is called when your extension is deactivated
